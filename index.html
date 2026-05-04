@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>For Naomi 🌸</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --blush: #f9c8d4;
+    --rose: #e8879a;
+    --dusty: #d4849a;
+    --deep-rose: #c0546e;
+    --gold: #d4af70;
+    --gold-light: #f0d898;
+    --cream: #fff5f7;
+    --white: #ffffff;
+    --text-dark: #5a2d3a;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Lato', sans-serif;
+    background: var(--cream);
+    color: var(--text-dark);
+    overflow-x: hidden;
+  }
+
+  /* ── LOCK SCREEN ── */
+  #lock-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #fce4ec 0%, #f8bbd9 30%, #e8a0b8 60%, #d4849a 100%);
+    overflow: hidden;
+    transition: opacity 1.2s ease, transform 1.2s ease;
+  }
+  #lock-screen.unlocked {
+    opacity: 0;
+    transform: scale(1.05);
+    pointer-events: none;
+  }
+
+  /* Petals canvas */
+  #petal-canvas {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .lock-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .lock-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.4rem, 8vw, 4.5rem);
+    color: #fff;
+    text-shadow: 0 2px 20px rgba(180,60,90,0.3);
+    margin-bottom: 0.5rem;
+    letter-spacing: 2px;
+  }
+
+  .lock-subtitle {
+    font-family: 'Lato', sans-serif;
+    font-size: clamp(1rem, 3vw, 1.3rem);
+    color: rgba(255,255,255,0.85);
+    font-weight: 300;
+    letter-spacing: 3px;
+    margin-bottom: 2.5rem;
+    font-style: italic;
+  }
+
+  .lock-divider {
+    width: 80px;
+    height: 2px;
+    background: linear-gradient(to right, transparent, var(--gold), transparent);
+    margin: 0 auto 2.5rem;
+  }
+
+  .password-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    justify-content: center;
+  }
+
+  #password-input {
+    font-family: 'Lato', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 4px;
+    padding: 0.85rem 1.4rem;
+    border: 2px solid rgba(255,255,255,0.6);
+    border-radius: 50px;
+    background: rgba(255,255,255,0.25);
+    backdrop-filter: blur(10px);
+    color: #fff;
+    outline: none;
+    width: 200px;
+    text-align: center;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+  #password-input::placeholder { color: rgba(255,255,255,0.6); letter-spacing: 2px; font-size: 0.95rem; }
+  #password-input:focus { border-color: var(--gold-light); box-shadow: 0 0 20px rgba(212,175,112,0.4); }
+
+  #unlock-btn {
+    width: 52px; height: 52px;
+    border: none;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    color: #fff;
+    font-size: 1.4rem;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(212,175,112,0.5);
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #unlock-btn:hover { transform: scale(1.1); box-shadow: 0 6px 25px rgba(212,175,112,0.7); }
+  #unlock-btn:active { transform: scale(0.95); }
+
+  .error-msg {
+    margin-top: 1rem;
+    color: rgba(255,255,255,0.9);
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    min-height: 1.5rem;
+    font-style: italic;
+    transition: opacity 0.3s;
+  }
+
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20% { transform: translateX(-10px); }
+    40% { transform: translateX(10px); }
+    60% { transform: translateX(-8px); }
+    80% { transform: translateX(8px); }
+  }
+  .shake { animation: shake 0.5s ease; }
+
+  /* ── MAIN CONTENT ── */
+  #main-content {
+    opacity: 0;
+    transition: opacity 1.5s ease 0.5s;
+  }
+  #main-content.visible { opacity: 1; }
+
+  /* ── LOVE LETTER ── */
+  #letter-section {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    background: linear-gradient(160deg, #fff0f5 0%, #fce8f0 50%, #f8d7e8 100%);
+    overflow: hidden;
+    padding: 4rem 2rem;
+  }
+
+  #letter-canvas {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .letter-inner {
+    position: relative;
+    z-index: 2;
+    max-width: 680px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .letter-heading {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 6vw, 3.2rem);
+    color: var(--deep-rose);
+    margin-bottom: 2.5rem;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+
+  .letter-card {
+    background: rgba(255,255,255,0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(212,175,112,0.3);
+    border-radius: 20px;
+    padding: 3rem 3.5rem;
+    box-shadow: 0 8px 40px rgba(192,84,110,0.1), 0 0 0 1px rgba(255,255,255,0.6) inset;
+  }
+
+  .letter-line {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.05rem, 2.5vw, 1.25rem);
+    line-height: 2;
+    color: var(--text-dark);
+    margin-bottom: 1.2rem;
+    opacity: 0;
+    transform: translateY(15px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+    font-style: italic;
+  }
+  .letter-line.visible { opacity: 1; transform: translateY(0); }
+  .letter-heading.visible { opacity: 1; transform: translateY(0); }
+
+  .letter-sig {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem;
+    color: var(--deep-rose);
+    margin-top: 1.5rem;
+    opacity: 0;
+    transform: translateY(15px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  .letter-sig.visible { opacity: 1; transform: translateY(0); }
+
+  /* ── SCRAPBOOK ── */
+  #scrapbook-section {
+    padding: 5rem 2rem;
+    background: linear-gradient(180deg, #fce8f0 0%, #fff0f5 100%);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 5vw, 3rem);
+    color: var(--deep-rose);
+    text-align: center;
+    margin-bottom: 3.5rem;
+    position: relative;
+  }
+  .section-title::after {
+    content: '';
+    display: block;
+    width: 80px;
+    height: 3px;
+    background: linear-gradient(to right, var(--rose), var(--gold));
+    border-radius: 2px;
+    margin: 0.8rem auto 0;
+  }
+
+  .scrapbook-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2.5rem;
+    justify-content: center;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .polaroid {
+    background: #fff;
+    padding: 14px 14px 52px;
+    box-shadow: 0 8px 30px rgba(192,84,110,0.15), 0 2px 8px rgba(0,0,0,0.08);
+    border-radius: 3px;
+    width: 260px;
+    cursor: default;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.7s ease, transform 0.7s ease, box-shadow 0.3s;
+  }
+  .polaroid.visible { opacity: 1; transform: translateY(0) rotate(var(--tilt, -2deg)); }
+  .polaroid:hover { box-shadow: 0 16px 50px rgba(192,84,110,0.25); transform: translateY(-6px) rotate(0deg) scale(1.02) !important; }
+
+  .polaroid img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    object-position: top center;
+    display: block;
+    border-radius: 1px;
+  }
+
+  .polaroid-caption {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.95rem;
+    color: var(--text-dark);
+    text-align: center;
+    margin-top: 0.6rem;
+    font-style: italic;
+  }
+
+  /* ── LOVE CARDS ── */
+  #love-section {
+    padding: 5rem 2rem;
+    background: linear-gradient(160deg, #fff5f7 0%, #fce0ec 100%);
+  }
+
+  .flip-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    justify-content: center;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .flip-card {
+    width: 260px;
+    height: 200px;
+    perspective: 1000px;
+    cursor: pointer;
+  }
+
+  .flip-inner {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.7s cubic-bezier(0.4,0,0.2,1);
+  }
+  .flip-card.flipped .flip-inner { transform: rotateY(180deg); }
+
+  .flip-front, .flip-back {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    border-radius: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    text-align: center;
+  }
+
+  .flip-front {
+    background: linear-gradient(135deg, #f9c8d4, #e8879a);
+    box-shadow: 0 8px 30px rgba(192,84,110,0.2);
+  }
+  .flip-front .icon { font-size: 3.5rem; margin-bottom: 0.5rem; }
+  .flip-front .tap-hint { font-size: 0.75rem; color: rgba(255,255,255,0.75); letter-spacing: 1px; margin-top: 0.4rem; }
+
+  .flip-back {
+    background: linear-gradient(135deg, #fff0f5, #ffe0ec);
+    border: 2px solid rgba(212,175,112,0.4);
+    box-shadow: 0 8px 30px rgba(192,84,110,0.15);
+    transform: rotateY(180deg);
+  }
+  .flip-back p {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 1rem;
+    color: var(--text-dark);
+    line-height: 1.7;
+  }
+
+  /* ── FOOTER ── */
+  #footer-section {
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f8d7e8, #e8879a);
+    position: relative;
+    overflow: hidden;
+    padding: 4rem 2rem;
+    text-align: center;
+  }
+
+  .footer-text {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.3rem, 4vw, 2rem);
+    color: #fff;
+    text-shadow: 0 2px 12px rgba(180,60,90,0.3);
+    position: relative;
+    z-index: 2;
+    letter-spacing: 1px;
+  }
+
+  #hearts-canvas {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .letter-card { padding: 2rem 1.5rem; }
+    .polaroid { width: 220px; }
+    .flip-card { width: 220px; height: 180px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════ LOCK SCREEN ═══════════════════════════════════ -->
+<div id="lock-screen">
+  <canvas id="petal-canvas"></canvas>
+  <div class="lock-content">
+    <div class="lock-title">For Naomi 🌸</div>
+    <div class="lock-subtitle">Something special awaits...</div>
+    <div class="lock-divider"></div>
+    <div class="password-wrapper">
+      <input id="password-input" type="password" placeholder="mm/dd/yy" maxlength="8" autocomplete="off" />
+      <button id="unlock-btn" onclick="tryUnlock()">♡</button>
+    </div>
+    <div class="error-msg" id="error-msg"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ MAIN CONTENT ══════════════════════════════════ -->
+<div id="main-content">
+
+  <!-- LOVE LETTER -->
+  <section id="letter-section">
+    <canvas id="letter-canvas"></canvas>
+    <div class="letter-inner">
+      <div class="letter-heading" id="lh">Happy 2 Months, Naomi 💕</div>
+      <div class="letter-card">
+        <div class="letter-line" id="ll1">Two months since we first talked online, and somehow it already feels like so much longer.</div>
+        <div class="letter-line" id="ll2">Every conversation with you is something I look forward to.</div>
+        <div class="letter-line" id="ll3">Your eyes, your hair, your smile — you make everything feel warmer.</div>
+        <div class="letter-line" id="ll4">I'm so grateful you're mine.</div>
+        <div class="letter-sig" id="lsig">— Yours 🌸</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCRAPBOOK -->
+  <section id="scrapbook-section">
+    <div class="section-title">Our Moments 📸</div>
+    <div class="scrapbook-grid" id="scrapbook-grid">
+
+      <div class="polaroid" style="--tilt: -3deg">
+        <img src="images/photo1.jpg" alt="Her smile" />
+        <div class="polaroid-caption">Her smile 🌸</div>
+      </div>
+
+      <div class="polaroid" style="--tilt: 2deg">
+        <img src="images/photo2.jpg" alt="Always effortless" />
+        <div class="polaroid-caption">Always effortless 💫</div>
+      </div>
+
+      <div class="polaroid" style="--tilt: -2deg">
+        <img src="images/photo3.jpg" alt="Those eyes" />
+        <div class="polaroid-caption">Those eyes 💙</div>
+      </div>
+
+      <div class="polaroid" style="--tilt: 3deg">
+        <img src="images/photo4.jpg" alt="Us" />
+        <div class="polaroid-caption">Us 🤍</div>
+      </div>
+
+      <div class="polaroid" style="--tilt: -1deg">
+        <img src="images/photo5.jpg" alt="Holding on" />
+        <div class="polaroid-caption">Holding on 🫶</div>
+      </div>
+
+      <div class="polaroid" style="--tilt: 2deg">
+        <img src="images/photo6.jpg" alt="Flowers" />
+        <div class="polaroid-caption">Flowers for my girl 🌹</div>
+      </div>
+
+      <div class="polaroid" style="--tilt: -3deg">
+        <img src="images/photo7.jpg" alt="Nails" />
+        <div class="polaroid-caption">Even her nails are cute 💅</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- LOVE CARDS -->
+  <section id="love-section">
+    <div class="section-title">Things I love about you 💕</div>
+    <div class="flip-grid">
+
+      <div class="flip-card" onclick="this.classList.toggle('flipped')">
+        <div class="flip-inner">
+          <div class="flip-front">
+            <div class="icon">👁️</div>
+            <div class="tap-hint">tap to reveal</div>
+          </div>
+          <div class="flip-back">
+            <p>"Your eyes — the way they look at me makes me feel like the only person in the world"</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flip-card" onclick="this.classList.toggle('flipped')">
+        <div class="flip-inner">
+          <div class="flip-front">
+            <div class="icon">💇‍♀️</div>
+            <div class="tap-hint">tap to reveal</div>
+          </div>
+          <div class="flip-back">
+            <p>"Your hair — it frames you perfectly in every single photo"</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flip-card" onclick="this.classList.toggle('flipped')">
+        <div class="flip-inner">
+          <div class="flip-front">
+            <div class="icon">😊</div>
+            <div class="tap-hint">tap to reveal</div>
+          </div>
+          <div class="flip-back">
+            <p>"Your smile — the one that lights up your whole face and makes me smile too"</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <section id="footer-section">
+    <canvas id="hearts-canvas"></canvas>
+    <div class="footer-text">Happy 2 months, Naomi.<br>Here's to many more. 💕</div>
+  </section>
+
+</div><!-- end main-content -->
+
+<script>
+// ── PASSWORD ──────────────────────────────────────────────
+const CORRECT = '08/03/26';
+
+document.getElementById('password-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') tryUnlock();
+});
+
+function tryUnlock() {
+  const val = document.getElementById('password-input').value.trim();
+  if (val === CORRECT) {
+    document.getElementById('lock-screen').classList.add('unlocked');
+    const mc = document.getElementById('main-content');
+    mc.classList.add('visible');
+    setTimeout(startLetterAnimation, 800);
+    setTimeout(initScrollObserver, 1000);
+    setTimeout(startHeartsCanvas, 1200);
+  } else {
+    const pw = document.getElementById('password-input');
+    const em = document.getElementById('error-msg');
+    pw.classList.remove('shake');
+    void pw.offsetWidth;
+    pw.classList.add('shake');
+    em.textContent = 'Try again, love... ✨';
+    setTimeout(() => { em.textContent = ''; }, 2500);
+    pw.value = '';
+  }
+}
+
+// ── PETAL CANVAS (lock screen) ────────────────────────────
+(function() {
+  const canvas = document.getElementById('petal-canvas');
+  const ctx = canvas.getContext('2d');
+  let petals = [];
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function spawnPetal() {
+    petals.push({
+      x: Math.random() * canvas.width,
+      y: -20,
+      size: 6 + Math.random() * 12,
+      speedY: 1 + Math.random() * 2,
+      speedX: (Math.random() - 0.5) * 1.5,
+      opacity: 0.5 + Math.random() * 0.5,
+      angle: Math.random() * Math.PI * 2,
+      spin: (Math.random() - 0.5) * 0.05,
+      hue: Math.random() > 0.5 ? '#f9c8d4' : '#e8879a'
+    });
+  }
+
+  function drawPetal(p) {
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(p.angle);
+    ctx.globalAlpha = p.opacity;
+    ctx.fillStyle = p.hue;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, p.size, p.size * 0.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  let frame = 0;
+  function animPetals() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (frame++ % 4 === 0) spawnPetal();
+    petals = petals.filter(p => p.y < canvas.height + 30);
+    petals.forEach(p => {
+      p.y += p.speedY;
+      p.x += p.speedX;
+      p.angle += p.spin;
+      drawPetal(p);
+    });
+    requestAnimationFrame(animPetals);
+  }
+  animPetals();
+})();
+
+// ── LETTER CANVAS (letter section petals) ─────────────────
+(function() {
+  const canvas = document.getElementById('letter-canvas');
+  const ctx = canvas.getContext('2d');
+  let petals = [];
+
+  function resize() {
+    canvas.width = canvas.parentElement.offsetWidth;
+    canvas.height = canvas.parentElement.offsetHeight;
+  }
+
+  window.addEventListener('resize', resize);
+  setTimeout(resize, 500);
+
+  function spawnPetal() {
+    petals.push({
+      x: Math.random() * (canvas.width || 800),
+      y: -20,
+      size: 5 + Math.random() * 10,
+      speedY: 0.6 + Math.random() * 1.2,
+      speedX: (Math.random() - 0.5),
+      opacity: 0.2 + Math.random() * 0.3,
+      angle: Math.random() * Math.PI * 2,
+      spin: (Math.random() - 0.5) * 0.03,
+      hue: Math.random() > 0.5 ? '#f9c8d4' : '#e8879a'
+    });
+  }
+
+  function animLP() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (Math.random() < 0.15) spawnPetal();
+    petals = petals.filter(p => p.y < (canvas.height || 600) + 30);
+    petals.forEach(p => {
+      p.y += p.speedY; p.x += p.speedX; p.angle += p.spin;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.angle);
+      ctx.globalAlpha = p.opacity;
+      ctx.fillStyle = p.hue;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, p.size, p.size * 0.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+    requestAnimationFrame(animLP);
+  }
+  animLP();
+})();
+
+// ── LETTER ANIMATION ─────────────────────────────────────
+function startLetterAnimation() {
+  const els = [
+    { id: 'lh', delay: 0 },
+    { id: 'll1', delay: 600 },
+    { id: 'll2', delay: 1200 },
+    { id: 'll3', delay: 1800 },
+    { id: 'll4', delay: 2400 },
+    { id: 'lsig', delay: 3200 },
+  ];
+  els.forEach(({id, delay}) => {
+    setTimeout(() => {
+      document.getElementById(id).classList.add('visible');
+    }, delay);
+  });
+}
+
+// ── SCROLL OBSERVER (polaroids) ──────────────────────────
+function initScrollObserver() {
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => entry.target.classList.add('visible'), i * 100);
+        obs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+
+  document.querySelectorAll('.polaroid').forEach(el => obs.observe(el));
+}
+
+// ── HEARTS FOOTER ────────────────────────────────────────
+function startHeartsCanvas() {
+  const canvas = document.getElementById('hearts-canvas');
+  const ctx = canvas.getContext('2d');
+  let hearts = [];
+
+  function resize() {
+    canvas.width = canvas.parentElement.offsetWidth;
+    canvas.height = canvas.parentElement.offsetHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function spawnHeart() {
+    hearts.push({
+      x: 30 + Math.random() * ((canvas.width || 400) - 60),
+      y: (canvas.height || 300) + 10,
+      size: 10 + Math.random() * 20,
+      speed: 1 + Math.random() * 2,
+      opacity: 0.4 + Math.random() * 0.5,
+      wobble: Math.random() * Math.PI * 2,
+      wobbleSpeed: 0.02 + Math.random() * 0.03,
+    });
+  }
+
+  function drawHeart(ctx, x, y, size, opacity) {
+    ctx.save();
+    ctx.globalAlpha = opacity;
+    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+    ctx.beginPath();
+    ctx.moveTo(x, y + size * 0.3);
+    ctx.bezierCurveTo(x, y, x - size, y, x - size, y + size * 0.4);
+    ctx.bezierCurveTo(x - size, y + size, x, y + size * 1.2, x, y + size * 1.5);
+    ctx.bezierCurveTo(x, y + size * 1.2, x + size, y + size, x + size, y + size * 0.4);
+    ctx.bezierCurveTo(x + size, y, x, y, x, y + size * 0.3);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  let hframe = 0;
+  function animHearts() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (hframe++ % 40 === 0) spawnHeart();
+    hearts = hearts.filter(h => h.y > -50);
+    hearts.forEach(h => {
+      h.y -= h.speed;
+      h.wobble += h.wobbleSpeed;
+      const wx = h.x + Math.sin(h.wobble) * 15;
+      drawHeart(ctx, wx, h.y, h.size, h.opacity);
+    });
+    requestAnimationFrame(animHearts);
+  }
+  animHearts();
+}
+</script>
+</body>
+</html>
